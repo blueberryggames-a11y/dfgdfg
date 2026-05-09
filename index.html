@@ -84,7 +84,6 @@ nav {
 }
 .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── CONFIG BANNER ── */
 #configBanner {
   position: fixed; top: 64px; left: 0; right: 0; z-index: 99;
   background: rgba(232,64,28,0.12); border-bottom: 1px solid rgba(232,64,28,0.3);
@@ -97,7 +96,6 @@ nav {
   margin-left: auto; background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px;
 }
 
-/* ── PROXY CONFIG MODAL ── */
 #proxyModal {
   position: fixed; inset: 0; z-index: 300;
   background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
@@ -113,14 +111,11 @@ nav {
   margin-bottom: 6px;
 }
 .proxy-modal-box p { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 20px; }
-.proxy-input-row {
-  display: flex; gap: 10px; margin-bottom: 14px;
-}
+.proxy-input-row { display: flex; gap: 10px; margin-bottom: 14px; }
 .proxy-input-row input {
   flex: 1; background: var(--bg3); border: 1px solid var(--border);
   border-radius: 8px; padding: 10px 14px; color: var(--text);
-  font-family: 'JetBrains Mono', monospace; font-size: 12px; outline: none;
-  transition: border-color .2s;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; outline: none; transition: border-color .2s;
 }
 .proxy-input-row input:focus { border-color: var(--accent); }
 .proxy-save-btn {
@@ -131,8 +126,7 @@ nav {
 .proxy-save-btn:hover { background: var(--accent2); }
 .proxy-steps {
   background: var(--bg3); border-radius: 8px; padding: 16px;
-  font-size: 12px; color: var(--text2); line-height: 1.9;
-  border: 1px solid var(--border);
+  font-size: 12px; color: var(--text2); line-height: 1.9; border: 1px solid var(--border);
 }
 .proxy-steps strong { color: var(--text); }
 .proxy-steps code {
@@ -410,13 +404,32 @@ main { padding-top: 64px; }
 }
 .toast.show { transform: translateY(0); opacity: 1; }
 
-/* Loading spinner */
 .spinner {
   width: 40px; height: 40px; border: 3px solid var(--bg4);
   border-top-color: var(--accent); border-radius: 50%;
   animation: spin .8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Stream error box */
+.stream-err {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 24px; text-align: center; max-width: 380px;
+}
+.stream-err-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.stream-err-detail {
+  font-size: 11px; color: var(--text3); line-height: 1.7;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 12px; font-family: 'JetBrains Mono', monospace; width: 100%; text-align: left;
+}
+.stream-err-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.err-btn {
+  font-size: 12px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--bg3); color: var(--text2); cursor: pointer; font-family: inherit; transition: all .2s;
+}
+.err-btn:hover { border-color: var(--accent); color: var(--accent); }
+.err-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.err-btn.primary:hover { background: var(--accent2); }
 
 @media (max-width: 768px) {
   nav { padding: 0 16px; }
@@ -442,35 +455,23 @@ main { padding-top: 64px; }
 <div id="proxyModal">
   <div class="proxy-modal-box">
     <h2>🔧 Configure CORS Proxy</h2>
-    <p>
-      Streams are blocked by your browser due to CORS restrictions. You need a small proxy to relay HLS streams.
-      Deploy the included <strong>cloudflare-worker.js</strong> and paste your Worker URL below.
-    </p>
-
+    <p>Deploy the included <strong>cloudflare-worker.js</strong> and paste your Worker URL below.</p>
     <div class="proxy-steps">
       <strong>Quick setup (2 min):</strong><br>
       1. Go to <strong>workers.cloudflare.com</strong> → Sign up free → Create Worker<br>
       2. Paste the contents of <code>cloudflare-worker.js</code> → Deploy<br>
       3. Copy your Worker URL (e.g. <code>https://anistream-proxy.yourname.workers.dev</code>)<br>
-      4. Paste it below and save<br><br>
-      <strong>Or use the existing public proxy (rate-limited):</strong><br>
-      <code>https://corsproxy.io/?</code> — works but may be slow
+      4. Paste it below and save
     </div>
-
     <br>
     <div class="proxy-input-row">
       <input type="text" id="proxyUrlInput" placeholder="https://anistream-proxy.yourname.workers.dev">
       <button class="proxy-save-btn" onclick="saveProxyUrl()">Save</button>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button class="proxy-save-btn" style="background:var(--bg4);color:var(--text2);border:1px solid var(--border)"
-        onclick="usePublicProxy()">Use Public Proxy (slow)</button>
-      <button class="proxy-save-btn" style="background:var(--bg4);color:var(--text2);border:1px solid var(--border)"
-        onclick="skipProxy()">Skip (local only)</button>
+      <button class="proxy-save-btn" style="background:var(--bg4);color:var(--text2);border:1px solid var(--border)" onclick="skipProxy()">Skip (localhost only)</button>
     </div>
-    <div class="proxy-skip" onclick="document.getElementById('proxyModal').classList.remove('open')">
-      Close without saving
-    </div>
+    <div class="proxy-skip" onclick="document.getElementById('proxyModal').classList.remove('open')">Close without saving</div>
   </div>
 </div>
 
@@ -601,6 +602,7 @@ main { padding-top: 64px; }
         <span class="server-label">SERVER:</span>
         <button class="server-btn active" id="serverBtn1" onclick="switchServer(0,this)">Server 1</button>
         <button class="server-btn" id="serverBtn2" onclick="switchServer(1,this)">Server 2</button>
+        <button class="server-btn" id="serverBtn3" onclick="switchServer(2,this)" style="display:none">Server 3</button>
         <div style="margin-left:auto; display:flex; gap:8px;">
           <button class="sub-dub-btn active" id="subBtn" onclick="switchCategory('sub')">SUB</button>
           <button class="sub-dub-btn" id="dubBtn" onclick="switchCategory('dub')">DUB</button>
@@ -667,68 +669,56 @@ main { padding-top: 64px; }
 <div class="toast" id="toast"></div>
 
 <script>
-// ── PROXY CONFIG ──
+// ── PROXY / API CONFIG ────────────────────────────────────────────────────────
 let PROXY_URL = localStorage.getItem('anistream_proxy') || '';
 
-// When a Cloudflare Worker is configured, ALL requests go through it —
-// the worker forwards API routes to your local tunnel AND handles HLS CORS.
-// On localhost we skip the worker and hit the local API directly.
 function getAPIBase() {
   const h = window.location.hostname;
-  const proto = window.location.protocol;
-  // Localhost — hit API directly
   if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:8000';
-  // file:// or any remote origin — must go through the worker
   const saved = localStorage.getItem('anistream_proxy') || '';
-  if (saved && (saved.includes('workers.dev') || localStorage.getItem('anistream_proxy_type') === 'worker')) {
-    return saved.replace(/\/$/, '');
-  }
-  return localStorage.getItem('anistream_api') || 'http://localhost:8000';
+  if (saved) return saved.replace(/\/$/, '');
+  return 'http://localhost:8000';
 }
 const API_URL = getAPIBase();
 
-// Warn if opened as file:// — all requests will be blocked by CORS
-if (window.location.protocol === 'file:') {
-  const banner = document.getElementById('configBanner');
-  if (banner) {
-    banner.innerHTML = '⚠️ Opened as a local file — CORS will block all requests. ' +
-      '<strong>Set up your Cloudflare Worker proxy</strong> or serve via a local web server. ' +
-      '<a onclick="openProxyModal()">Configure proxy →</a>' +
-      '<button onclick="this.parentElement.classList.add(\'hidden\')">✕</button>';
-    banner.classList.remove('hidden');
-    banner.style.background = 'rgba(232,64,28,0.2)';
-  }
+// Is our "proxy" actually a Cloudflare Worker that also handles the API?
+function isWorkerProxy() {
+  return PROXY_URL && (
+    PROXY_URL.includes('workers.dev') ||
+    localStorage.getItem('anistream_proxy_type') === 'worker'
+  );
 }
 
-// ── FIX 1: fetchWithTimeout — prevents infinite loading on slow/dead API ──
-async function fetchWithTimeout(url, timeoutMs = 15000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timer);
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    return res.json();
-  } catch (err) {
-    clearTimeout(timer);
-    if (err.name === 'AbortError') throw new Error('Request timed out after ' + (timeoutMs/1000) + 's');
-    throw err;
-  }
+// Determine if a URL is a kwik/embed URL (needs extraction, not direct HLS)
+function isEmbedUrl(url) {
+  return url && (
+    url.includes('kwik.cx') ||
+    url.includes('kwik.si') ||
+    url.includes('/e/') // kwik embed pattern
+  );
 }
 
+// Route an HLS URL through the worker proxy
 function getProxiedUrl(url) {
   if (!url) return url;
-  // If API_URL is the worker, route HLS through its /proxy endpoint
-  if (API_URL && (API_URL.includes('workers.dev') || localStorage.getItem('anistream_proxy_type') === 'worker')) {
-    return `${API_URL}/proxy?url=${encodeURIComponent(url)}`;
-  }
-  // Fall back to a separately configured PROXY_URL (e.g. corsproxy.io)
   if (!PROXY_URL) return url;
   const base = PROXY_URL.replace(/\/$/, '');
-  if (localStorage.getItem('anistream_proxy_type') === 'worker') {
+  if (isWorkerProxy()) {
     return `${base}/proxy?url=${encodeURIComponent(url)}`;
   }
-  return `${base}${url}`; // generic CORS proxy like corsproxy.io
+  return `${base}${url}`; // generic CORS proxy fallback
+}
+
+// Extract a playable URL from an embed (kwik etc.) via worker /extract endpoint
+async function extractEmbedUrl(embedUrl) {
+  if (!isWorkerProxy()) throw new Error('Worker proxy required for embed extraction');
+  const base = PROXY_URL.replace(/\/$/, '');
+  const res = await fetch(`${base}/extract?url=${encodeURIComponent(embedUrl)}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    throw new Error(err.error || err.detail || `Extract failed: ${res.status}`);
+  }
+  return res.json(); // { url: proxied_m3u8_url, raw, type }
 }
 
 function openProxyModal() {
@@ -746,19 +736,8 @@ function saveProxyUrl() {
   document.getElementById('proxyModal').classList.remove('open');
   document.getElementById('configBanner').classList.add('hidden');
   updateProxyStatus();
-  // Reload so API_URL picks up the new worker base
   showToast('✅ Proxy saved! Reloading...');
   setTimeout(() => location.reload(), 1200);
-}
-
-function usePublicProxy() {
-  PROXY_URL = 'https://corsproxy.io/?';
-  localStorage.setItem('anistream_proxy', PROXY_URL);
-  localStorage.setItem('anistream_proxy_type', 'generic');
-  document.getElementById('proxyModal').classList.remove('open');
-  document.getElementById('configBanner').classList.add('hidden');
-  updateProxyStatus();
-  showToast('Using public proxy (may be slow)');
 }
 
 function skipProxy() {
@@ -780,31 +759,31 @@ function updateProxyStatus() {
   }
 }
 
-// ── STATE ──
-let spotlightData = [], currentSpotlightIdx = 0, currentSpotlight = null, spotlightTimer = null;
-let currentAnime = null, currentEpisodes = [], currentCategory = 'sub';
-let currentProvider = null, activeEpIdx = -1;
-let sectionPage = 1, sectionType = 'trending', sectionHasMore = true;
-let filterState = { sort: 'POPULARITY_DESC' };
-let searchTimeout = null;
-let currentStreams = [];
-let activeStreamIdx = 0;
-
-// ── FIX 2: AbortController to cancel stale episode requests ──
-let _activeEpController = null;
-
-const $ = id => document.getElementById(id);
-
-async function fetchAPI(path) {
-  return fetchWithTimeout(`${API_URL}${path}`);
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+async function fetchWithTimeout(url, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    return res.json();
+  } catch (err) {
+    clearTimeout(timer);
+    if (err.name === 'AbortError') throw new Error('Request timed out after ' + (timeoutMs/1000) + 's');
+    throw err;
+  }
 }
+
+async function fetchAPI(path) { return fetchWithTimeout(`${API_URL}${path}`); }
 
 function stripHtml(s) { return s ? s.replace(/<[^>]*>/g,'').replace(/&[^;]+;/g,' ') : ''; }
 function scoreColor(s) { if (!s) return 'var(--text3)'; if (s >= 80) return '#2ecc71'; if (s >= 65) return '#f1c40f'; return '#e74c3c'; }
 
-function showToast(msg) {
-  const t = $('toast'); t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
+function showToast(msg, duration = 2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
 }
 
 function skeletonCards(n, container) {
@@ -845,7 +824,9 @@ function buildCard(anime) {
   return card;
 }
 
-// ── SPOTLIGHT ──
+// ── SPOTLIGHT ─────────────────────────────────────────────────────────────────
+let spotlightData = [], currentSpotlightIdx = 0, currentSpotlight = null, spotlightTimer = null;
+
 async function loadSpotlight() {
   try {
     const data = await fetchAPI('/spotlight');
@@ -858,7 +839,7 @@ async function loadSpotlight() {
 }
 
 function renderSpotlightDots() {
-  $('heroDots').innerHTML = spotlightData.slice(0,10).map((_,i) =>
+  document.getElementById('heroDots').innerHTML = spotlightData.slice(0,10).map((_,i) =>
     `<div class="dot-item${i===0?' active':''}" onclick="setSpotlight(${i})"></div>`
   ).join('');
 }
@@ -867,15 +848,15 @@ function setSpotlight(idx) {
   currentSpotlightIdx = idx;
   currentSpotlight = spotlightData[idx];
   const a = currentSpotlight;
-  $('heroBg').style.backgroundImage = `url('${a.bannerImage || a.coverImage?.extraLarge || ''}')`;
-  $('heroTitle').textContent = a.title?.english || a.title?.romaji || 'Unknown';
-  $('heroBadges').innerHTML = `
+  document.getElementById('heroBg').style.backgroundImage = `url('${a.bannerImage || a.coverImage?.extraLarge || ''}')`;
+  document.getElementById('heroTitle').textContent = a.title?.english || a.title?.romaji || 'Unknown';
+  document.getElementById('heroBadges').innerHTML = `
     <span class="badge badge-format">${a.format || 'TV'}</span>
     ${(a.genres||[]).slice(0,3).map(g=>`<span class="badge badge-ep">${g}</span>`).join('')}`;
-  $('heroMeta').innerHTML = [a.startDate?.year, a.season ? a.season+' '+a.seasonYear : null, a.status?.replace(/_/g,' ')]
+  document.getElementById('heroMeta').innerHTML = [a.startDate?.year, a.season ? a.season+' '+a.seasonYear : null, a.status?.replace(/_/g,' ')]
     .filter(Boolean).map((x,i,arr) => i<arr.length-1 ? x+'<span class="dot"></span>' : x).join('');
-  $('heroDesc').textContent = stripHtml(a.description || '').slice(0,200) + (a.description?.length > 200 ? '…' : '');
-  $('heroStats').innerHTML = [
+  document.getElementById('heroDesc').textContent = stripHtml(a.description || '').slice(0,200) + (a.description?.length > 200 ? '…' : '');
+  document.getElementById('heroStats').innerHTML = [
     a.averageScore ? ['Rating', (a.averageScore/10).toFixed(1)+'/10'] : null,
     a.episodes ? ['Episodes', a.episodes] : null,
     a.status ? ['Status', a.status.replace(/_/g,' ')] : null,
@@ -887,94 +868,99 @@ function startSpotlightTimer() {
   clearInterval(spotlightTimer);
   spotlightTimer = setInterval(() => setSpotlight((currentSpotlightIdx+1) % Math.min(spotlightData.length,10)), 6000);
 }
-
 function watchFromHero() { if (currentSpotlight) openDetail(currentSpotlight); }
 
-// ── HOME ──
+// ── HOME ──────────────────────────────────────────────────────────────────────
 async function loadHomeRows() {
-  skeletonCards(8, $('trendingRow'));
-  skeletonCards(8, $('recentRow'));
-  skeletonCards(12, $('popularGrid'));
+  skeletonCards(8, document.getElementById('trendingRow'));
+  skeletonCards(8, document.getElementById('recentRow'));
+  skeletonCards(12, document.getElementById('popularGrid'));
   try {
     const [tr, rc, po] = await Promise.all([
       fetchAPI('/trending?per_page=12'),
       fetchAPI('/recent?per_page=12'),
       fetchAPI('/popular?per_page=12'),
     ]);
-    $('trendingRow').innerHTML = '';
-    (tr.results||[]).forEach(a => $('trendingRow').appendChild(buildCard(a)));
-    $('recentRow').innerHTML = '';
-    (rc.results||[]).forEach(a => $('recentRow').appendChild(buildCard(a)));
-    $('popularGrid').innerHTML = '';
-    (po.results||[]).forEach(a => $('popularGrid').appendChild(buildCard(a)));
+    document.getElementById('trendingRow').innerHTML = '';
+    (tr.results||[]).forEach(a => document.getElementById('trendingRow').appendChild(buildCard(a)));
+    document.getElementById('recentRow').innerHTML = '';
+    (rc.results||[]).forEach(a => document.getElementById('recentRow').appendChild(buildCard(a)));
+    document.getElementById('popularGrid').innerHTML = '';
+    (po.results||[]).forEach(a => document.getElementById('popularGrid').appendChild(buildCard(a)));
   } catch(e) {
     showToast('Failed to load content. Is the API running?');
     console.error(e);
   }
 }
 
-// ── VIEWS ──
+// ── VIEWS ─────────────────────────────────────────────────────────────────────
 function showView(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  $(id).classList.add('active');
+  document.getElementById(id).classList.add('active');
   window.scrollTo({top:0, behavior:'smooth'});
 }
-
 function showHome() {
   showView('homeView');
   document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
   document.querySelector('.nav-links a').classList.add('active');
 }
 
-// ── SECTION ──
+// ── SECTION ───────────────────────────────────────────────────────────────────
 const SECTION_LABELS = { trending:'🔥 Trending', popular:'⭐ Popular', recent:'📡 Currently Airing', upcoming:'🗓 Upcoming' };
+let sectionPage = 1, sectionType = 'trending', sectionHasMore = true;
 
 async function loadSection(type) {
   sectionType = type; sectionPage = 1; sectionHasMore = true;
   showView('sectionView');
-  $('sectionBreadcrumb').textContent = SECTION_LABELS[type] || type;
-  $('sectionTitle').textContent = SECTION_LABELS[type] || type;
-  skeletonCards(20, $('sectionGrid'));
-  $('loadMoreBtn').style.display = 'block';
+  document.getElementById('sectionBreadcrumb').textContent = SECTION_LABELS[type] || type;
+  document.getElementById('sectionTitle').textContent = SECTION_LABELS[type] || type;
+  skeletonCards(20, document.getElementById('sectionGrid'));
+  document.getElementById('loadMoreBtn').style.display = 'block';
   document.querySelectorAll('.nav-links a').forEach(a => {
     a.classList.toggle('active', a.textContent.toLowerCase().includes(type.split('_')[0]));
   });
   try {
     const data = await fetchAPI(`/${type}?per_page=20&page=1`);
-    $('sectionGrid').innerHTML = '';
-    (data.results||[]).forEach(a => $('sectionGrid').appendChild(buildCard(a)));
+    document.getElementById('sectionGrid').innerHTML = '';
+    (data.results||[]).forEach(a => document.getElementById('sectionGrid').appendChild(buildCard(a)));
     sectionHasMore = data.hasNextPage;
-    if (!sectionHasMore) $('loadMoreBtn').style.display = 'none';
+    if (!sectionHasMore) document.getElementById('loadMoreBtn').style.display = 'none';
   } catch(e) { showToast('Failed to load section.'); }
 }
 
 async function loadMoreSection() {
   if (!sectionHasMore) return;
   sectionPage++;
-  const btn = $('loadMoreBtn');
+  const btn = document.getElementById('loadMoreBtn');
   btn.textContent = 'Loading...'; btn.disabled = true;
   try {
     const data = await fetchAPI(`/${sectionType}?per_page=20&page=${sectionPage}`);
-    (data.results||[]).forEach(a => $('sectionGrid').appendChild(buildCard(a)));
+    (data.results||[]).forEach(a => document.getElementById('sectionGrid').appendChild(buildCard(a)));
     sectionHasMore = data.hasNextPage;
     if (!sectionHasMore) btn.style.display = 'none';
     else { btn.textContent = 'Load More'; btn.disabled = false; }
   } catch(e) { btn.textContent = 'Load More'; btn.disabled = false; }
 }
 
-// ── WATCH VIEW ──
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let currentAnime = null, currentEpisodes = [], currentCategory = 'sub';
+let currentProvider = null, activeEpIdx = -1;
+let currentStreams = [], activeStreamIdx = 0;
+let _activeEpController = null, _hlsInstance = null;
+
+// ── WATCH / DETAIL ────────────────────────────────────────────────────────────
 async function openDetail(anime) {
   currentAnime = anime;
   currentCategory = 'sub';
   activeEpIdx = -1;
   showView('watchView');
-  $('watchBreadAnime').textContent = anime.title?.english || anime.title?.romaji || 'Anime';
-  $('watchBreadEp').textContent = 'Episodes';
-  $('watchingTitle').textContent = '—';
-  $('epList').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">Loading episodes...</div>';
-  $('epCountBadge').textContent = '...';
-  $('subBtn').classList.add('active');
-  $('dubBtn').classList.remove('active');
+  document.getElementById('watchBreadAnime').textContent = anime.title?.english || anime.title?.romaji || 'Anime';
+  document.getElementById('watchBreadEp').textContent = 'Episodes';
+  document.getElementById('watchingTitle').textContent = '—';
+  document.getElementById('epList').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">Loading episodes...</div>';
+  document.getElementById('epCountBadge').textContent = '...';
+  document.getElementById('subBtn').classList.add('active');
+  document.getElementById('dubBtn').classList.remove('active');
   renderWatchDetail(anime);
   updateProxyStatus();
   await loadEpisodes(anime.id);
@@ -986,7 +972,7 @@ function renderWatchDetail(anime) {
   const title = anime.title?.english || anime.title?.romaji || 'Unknown';
   const cover = anime.coverImage?.large || '';
   const desc = stripHtml(anime.description || '').slice(0,300);
-  $('watchDetailInfo').innerHTML = `
+  document.getElementById('watchDetailInfo').innerHTML = `
     <div class="detail-poster"><img src="${cover}" alt="${title}"></div>
     <div class="detail-text">
       <div class="detail-title">${title}</div>
@@ -1006,7 +992,7 @@ function renderWatchDetail(anime) {
     </div>`;
 }
 
-// ── EPISODES ──
+// ── EPISODES ──────────────────────────────────────────────────────────────────
 async function loadEpisodes(anilistId) {
   try {
     const data = await fetchAPI(`/episodes/${anilistId}`);
@@ -1014,16 +1000,16 @@ async function loadEpisodes(anilistId) {
     const providerOrder = ['kiwi','arc','zoro','jet'];
     currentProvider = providerOrder.find(p => providers[p]?.episodes?.[currentCategory]?.length) || Object.keys(providers)[0];
     currentEpisodes = getEpList(providers, currentProvider, currentCategory);
-    $('epCountBadge').textContent = currentEpisodes.length;
+    document.getElementById('epCountBadge').textContent = currentEpisodes.length;
     renderEpList(currentEpisodes);
     window._providers = providers;
   } catch(e) {
-    $('epList').innerHTML = `<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">
-      No episodes found.<br>
-      <span style="font-size:11px;color:var(--text3)">${e.message}</span><br><br>
-      Try a different anime.
-    </div>`;
-    $('epCountBadge').textContent = '0';
+    document.getElementById('epList').innerHTML = `
+      <div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">
+        No episodes found.<br>
+        <span style="font-size:11px">${e.message}</span>
+      </div>`;
+    document.getElementById('epCountBadge').textContent = '0';
     showToast('Could not load episodes: ' + e.message);
   }
 }
@@ -1033,7 +1019,7 @@ function getEpList(providers, provider, category) {
 }
 
 function renderEpList(eps) {
-  const list = $('epList');
+  const list = document.getElementById('epList');
   if (!eps.length) {
     list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">No episodes available.</div>';
     return;
@@ -1057,17 +1043,12 @@ function filterEpisodes(q) {
   });
 }
 
-let _hlsInstance = null;
-
-// ── playEpisode: fetches stream via the episode's own id path ──
+// ── PLAY EPISODE ──────────────────────────────────────────────────────────────
 async function playEpisode(idx) {
   const ep = currentEpisodes[idx];
   if (!ep) return;
 
-  // Cancel any previous in-flight stream request
-  if (_activeEpController) {
-    _activeEpController.abort();
-  }
+  if (_activeEpController) _activeEpController.abort();
   _activeEpController = new AbortController();
   const signal = _activeEpController.signal;
 
@@ -1075,87 +1056,78 @@ async function playEpisode(idx) {
   document.querySelectorAll('.ep-item').forEach((el,i) => el.classList.toggle('active', i===idx));
 
   const epTitle = currentAnime?.title?.english || currentAnime?.title?.romaji || '';
-  $('watchingTitle').textContent = `${epTitle} · Episode ${ep.number}`;
-  $('watchBreadEp').textContent = `Episode ${ep.number}`;
+  document.getElementById('watchingTitle').textContent = `${epTitle} · Episode ${ep.number}`;
+  document.getElementById('watchBreadEp').textContent = `Episode ${ep.number}`;
 
-  const epEl = $(`epItem${idx}`);
+  const epEl = document.getElementById(`epItem${idx}`);
   if (epEl) epEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
 
-  const vc = $('videoContainer');
-  vc.innerHTML = `<div class="video-placeholder">
-    <div class="spinner"></div>
-    <span style="font-size:13px;color:var(--text3)">Loading stream…</span>
-  </div>`;
+  const vc = document.getElementById('videoContainer');
+  setLoadingState(vc, 'Fetching stream info…');
+  resetServerButtons();
 
-  // Reset server buttons
-  $('serverBtn1').textContent = 'Server 1';
-  $('serverBtn2').textContent = 'Server 2';
-  $('serverBtn1').classList.add('active');
-  $('serverBtn2').classList.remove('active');
-  $('serverBtn1').disabled = false;
-  $('serverBtn2').disabled = true;
+  if (!ep.id) { showStreamError(vc, 'Episode has no stream ID.'); return; }
 
-  if (!ep.id) {
-    showStreamError(vc, 'Episode has no stream ID.');
-    return;
-  }
-
-  // ep.id is already a path like "watch/kiwi/178005/sub/animepahe-1"
-  // The API endpoint is GET /{that_path} directly — no extra prefix needed.
   const STREAM_TIMEOUT = 20000;
   const timer = setTimeout(() => _activeEpController?.abort(), STREAM_TIMEOUT);
 
   try {
     const res = await fetch(`${API_URL}/${ep.id}`, { signal });
     clearTimeout(timer);
-
     if (!res.ok) throw new Error(`Server returned ${res.status}: ${res.statusText}`);
-
     const streamData = await res.json();
-
     if (signal.aborted) return;
 
-    // API returns { sources: [{url, isM3U8, quality}], subtitles, intro, outro }
-    // Normalise all known shapes into a consistent [{url, type, quality}] array.
+    // Normalise sources into [{url, type, quality}]
     const rawSources = (
-      streamData.sources ||    // ← actual API field name
+      streamData.sources ||
       streamData.streams ||
       streamData.links ||
       (streamData.url ? [{ url: streamData.url }] : null) ||
       []
     );
 
-    // Normalise each source: map isM3U8 → type:'hls', file → url, etc.
     const streams = rawSources.map(s => ({
       url:     s.url || s.file || s.link || '',
       quality: s.quality || s.label || 'auto',
-      type:    (s.isM3U8 || s.type === 'hls' || (s.url||'').includes('.m3u8')) ? 'hls' : 'mp4',
+      type:    (s.isM3U8 || s.type === 'hls' || (s.url||'').includes('.m3u8')) ? 'hls' : (s.type || 'unknown'),
     })).filter(s => s.url);
 
-    if (!streams.length) {
-      throw new Error('No stream sources in API response');
-    }
+    if (!streams.length) throw new Error('No stream sources in API response');
 
     currentStreams = streams;
     activeStreamIdx = 0;
 
-    const btn1 = $('serverBtn1');
-    const btn2 = $('serverBtn2');
+    // Label server buttons based on quality
+    const btn1 = document.getElementById('serverBtn1');
+    const btn2 = document.getElementById('serverBtn2');
+    const btn3 = document.getElementById('serverBtn3');
     btn1.textContent = streams[0]?.quality ? `Server 1 (${streams[0].quality})` : 'Server 1';
-    btn2.textContent = streams[1]?.quality ? `Server 2 (${streams[1].quality})` : streams[1] ? 'Server 2' : 'N/A';
-    btn2.disabled = !streams[1];
+    if (streams[1]) {
+      btn2.textContent = streams[1].quality ? `Server 2 (${streams[1].quality})` : 'Server 2';
+      btn2.disabled = false;
+    } else {
+      btn2.textContent = 'Server 2'; btn2.disabled = true;
+    }
+    if (streams[2]) {
+      btn3.textContent = streams[2].quality ? `Server 3 (${streams[2].quality})` : 'Server 3';
+      btn3.style.display = '';
+      btn3.disabled = false;
+    } else {
+      btn3.style.display = 'none';
+    }
 
-    // API subtitles are [{file, label}] — loadStream also handles {url, label}
     const subtitles = streamData.subtitles || streamData.tracks || [];
-    await loadStream(streams[0], subtitles, streamData.intro, streamData.outro, vc);
-    showToast(`▶ Playing Episode ${ep.number}`);
+    await loadStream(streams[0], subtitles, streamData.intro, streamData.outro, vc, signal);
+    if (!signal.aborted) showToast(`▶ Playing Episode ${ep.number}`);
 
   } catch(e) {
     clearTimeout(timer);
-    if (e.name === 'AbortError') {
-      // Either user cancelled or timeout fired
-      if (!signal.aborted) return; // user switched episode — new one will handle it
-      showStreamError(vc, 'Stream request timed out (20s). Check your API server.');
+    if (signal.aborted) {
+      // Only show error if this signal is still the active one
+      if (_activeEpController?.signal === signal) {
+        showStreamError(vc, 'Stream request timed out. Check your API server.');
+      }
     } else {
       showStreamError(vc, e.message);
     }
@@ -1163,29 +1135,69 @@ async function playEpisode(idx) {
   }
 }
 
+function resetServerButtons() {
+  const btn1 = document.getElementById('serverBtn1');
+  const btn2 = document.getElementById('serverBtn2');
+  const btn3 = document.getElementById('serverBtn3');
+  btn1.textContent = 'Server 1'; btn1.classList.add('active');
+  btn2.textContent = 'Server 2'; btn2.classList.remove('active'); btn2.disabled = true;
+  btn3.style.display = 'none';
+}
+
+function setLoadingState(vc, msg) {
+  vc.innerHTML = `<div class="video-placeholder">
+    <div class="spinner"></div>
+    <span style="font-size:13px;color:var(--text3)">${msg}</span>
+  </div>`;
+}
+
 async function switchServer(idx, btn) {
   if (!currentStreams[idx]) return;
   activeStreamIdx = idx;
   document.querySelectorAll('.server-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
-  const vc = $('videoContainer');
-  vc.innerHTML = `<div class="video-placeholder"><div class="spinner"></div><span style="font-size:13px;color:var(--text3)">Switching server...</span></div>`;
-  await loadStream(currentStreams[idx], [], null, null, vc);
+  const vc = document.getElementById('videoContainer');
+  setLoadingState(vc, 'Switching server...');
+  await loadStream(currentStreams[idx], [], null, null, vc, null);
 }
 
-async function loadStream(stream, subtitles, intro, outro, vc) {
+// ── LOAD STREAM ───────────────────────────────────────────────────────────────
+async function loadStream(stream, subtitles, intro, outro, vc, signal) {
   if (_hlsInstance) { _hlsInstance.destroy(); _hlsInstance = null; }
 
-  // ── FIX 5: Handle both {url} and {file} field names ──
   let url = stream.url || stream.file || stream.link;
   if (!url) throw new Error('Stream object has no url/file/link field');
 
-  const isHLS = url.includes('.m3u8') || stream.type === 'hls' || stream.isM3U8;
-  const streamUrl = isHLS ? getProxiedUrl(url) : url;
+  // ── Handle embed URLs (kwik.cx etc.) ─────────────────────────────────────
+  if (isEmbedUrl(url)) {
+    setLoadingState(vc, 'Extracting stream from embed…');
+    if (!isWorkerProxy()) {
+      showStreamError(vc, 'This stream is an embed (kwik.cx). A Cloudflare Worker proxy is required to extract it.', true);
+      return;
+    }
+    try {
+      const extracted = await extractEmbedUrl(url);
+      // extracted.url is already proxied through the worker
+      url = extracted.url;
+      stream = { ...stream, url, type: extracted.type || 'hls' };
+    } catch (err) {
+      showStreamError(vc, `Embed extraction failed: ${err.message}`);
+      return;
+    }
+  }
 
+  // ── Route HLS through proxy ───────────────────────────────────────────────
+  const isHLS = url.includes('.m3u8') || stream.type === 'hls' || stream.isM3U8;
+
+  // If url already came from /proxy (was extracted), don't double-proxy it
+  const alreadyProxied = PROXY_URL && url.startsWith(PROXY_URL.replace(/\/$/, ''));
+  const streamUrl = (isHLS && !alreadyProxied) ? getProxiedUrl(url) : url;
+
+  // Build video element
+  const safeSubtitles = (subtitles || []).filter(s => s.file || s.url || s.src);
   vc.innerHTML = `<video id="hlsVideo" controls autoplay
     style="width:100%;height:100%;background:#000;display:block"
     crossorigin="anonymous">
-    ${(subtitles||[]).map(s => {
+    ${safeSubtitles.map(s => {
       const src = s.file || s.url || s.src || '';
       if (!src) return '';
       return `<track kind="subtitles" label="${s.label||s.lang||'Sub'}"
@@ -1194,9 +1206,9 @@ async function loadStream(stream, subtitles, intro, outro, vc) {
     }).join('')}
   </video>`;
 
-  const video = $('hlsVideo');
+  const video = document.getElementById('hlsVideo');
 
-  if (intro || outro) {
+  if ((intro || outro) && video) {
     video.addEventListener('timeupdate', () => {
       const t = video.currentTime;
       if (intro && t >= intro.start && t < intro.end) showSkipBtn('Skip Intro', intro.end, video);
@@ -1205,50 +1217,68 @@ async function loadStream(stream, subtitles, intro, outro, vc) {
     });
   }
 
-  // ── FIX 6: Better HLS error handling ──
   if (isHLS && Hls.isSupported()) {
     _hlsInstance = new Hls({
       enableWorker: true,
       lowLatencyMode: false,
-      maxLoadingDelay: 8,
-      manifestLoadingTimeOut: 12000,
-      xhrSetup: (xhr) => { xhr.withCredentials = false; }
+      maxLoadingDelay: 10,
+      manifestLoadingTimeOut: 15000,
+      levelLoadingTimeOut: 15000,
+      fragLoadingTimeOut: 20000,
+      xhrSetup: xhr => { xhr.withCredentials = false; },
     });
     _hlsInstance.loadSource(streamUrl);
     _hlsInstance.attachMedia(video);
     _hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => {}); });
+
     _hlsInstance.on(Hls.Events.ERROR, (event, data) => {
-      if (data.fatal) {
-        console.error('HLS fatal error:', data.type, data.details);
-        if (data.type === Hls.ErrorTypes.NETWORK_ERROR && PROXY_URL && streamUrl !== url) {
-          // Proxy failed — try direct URL
-          console.log('Proxy failed, trying direct URL…');
-          showToast('Proxy failed, trying direct…');
-          _hlsInstance.destroy();
-          _hlsInstance = new Hls({ enableWorker: true, manifestLoadingTimeOut: 12000 });
-          _hlsInstance.loadSource(url);
-          _hlsInstance.attachMedia(video);
-          _hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => {}); });
-          _hlsInstance.on(Hls.Events.ERROR, (ev2, d2) => {
-            if (d2.fatal) showStreamError(vc, `Playback failed: ${d2.details}`);
-          });
-        } else {
-          showStreamError(vc, `Playback error: ${data.details} — try switching server`);
+      if (!data.fatal) return;
+      console.error('HLS fatal error:', data.type, data.details, data);
+
+      // ── Specific error messages for common failures ──────────────────────
+      if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+        if (data.details === Hls.ErrorDetails.MANIFEST_LOAD_ERROR ||
+            data.details === Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT) {
+
+          // If we went through proxy and got 403, surface a clear message.
+          // Do NOT fall back to direct URL — it will always be blocked by CORS.
+          if (streamUrl !== url && PROXY_URL) {
+            showStreamError(vc,
+              'Proxy returned 403 — the CDN has IP-locked this stream token.\n' +
+              'This means the token was generated for your browser\'s IP, but the Worker has a different IP.\n' +
+              'Try Server 2, or try a different episode.',
+              true
+            );
+          } else {
+            showStreamError(vc,
+              'Manifest load failed. The stream URL may have expired or requires a proxy.\n' +
+              !PROXY_URL ? 'Configure a proxy to play streams outside localhost.' : data.details,
+              true
+            );
+          }
+          return;
         }
       }
+
+      showStreamError(vc, `Playback error: ${data.details}`, true);
     });
+
   } else if (isHLS && video.canPlayType('application/vnd.apple.mpegurl')) {
     // Safari native HLS
     video.src = streamUrl;
     video.play().catch(() => {});
   } else if (!isHLS) {
+    // MP4 / direct
     video.src = url;
-    video.play().catch(() => {});
+    video.play().catch(e => {
+      console.warn('Video play failed:', e);
+    });
   } else {
     showStreamError(vc, 'HLS not supported in this browser.');
   }
 }
 
+// ── SKIP BTN ──────────────────────────────────────────────────────────────────
 let _skipBtn = null;
 function showSkipBtn(label, skipTo, video) {
   if (_skipBtn) return;
@@ -1261,80 +1291,85 @@ function showSkipBtn(label, skipTo, video) {
     cursor:'pointer', boxShadow:'0 4px 16px rgba(0,0,0,0.4)',
   });
   _skipBtn.onclick = () => { video.currentTime = skipTo; hideSkipBtn(); };
-  $('videoContainer').appendChild(_skipBtn);
+  document.getElementById('videoContainer').appendChild(_skipBtn);
 }
 function hideSkipBtn() { if (_skipBtn) { _skipBtn.remove(); _skipBtn = null; } }
 
-function showStreamError(vc, detail) {
+// ── STREAM ERROR ──────────────────────────────────────────────────────────────
+function showStreamError(vc, detail, showServer2 = false) {
+  const hasServer2 = currentStreams.length > 1;
   vc.innerHTML = `
-    <div class="video-placeholder">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <div class="stream-err">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".7">
         <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
       </svg>
-      <span style="font-size:13px;text-align:center;max-width:340px;line-height:1.8">
-        Stream unavailable.<br>
-        <span style="color:var(--text3);font-size:11px">${detail||''}</span><br><br>
-        <span style="color:var(--accent);cursor:pointer;font-size:12px" onclick="openProxyModal()">🔧 Configure proxy</span>
-        &nbsp;·&nbsp;
-        <span style="color:var(--text2);cursor:pointer;font-size:12px" onclick="switchServer(1,document.getElementById('serverBtn2'))">Try Server 2</span>
-      </span>
+      <div class="stream-err-title">Stream unavailable</div>
+      <div class="stream-err-detail">${(detail||'Unknown error').replace(/\n/g,'<br>')}</div>
+      <div class="stream-err-actions">
+        ${hasServer2 && showServer2 ? `<button class="err-btn primary" onclick="switchServer(1, document.getElementById('serverBtn2'))">Try Server 2</button>` : ''}
+        <button class="err-btn" onclick="openProxyModal()">🔧 Proxy settings</button>
+        ${activeEpIdx > 0 ? `<button class="err-btn" onclick="playEpisode(${activeEpIdx - 1})">← Previous episode</button>` : ''}
+      </div>
     </div>`;
 }
 
+// ── SUB / DUB TOGGLE ──────────────────────────────────────────────────────────
 function switchCategory(cat) {
   currentCategory = cat;
-  $('subBtn').classList.toggle('active', cat==='sub');
-  $('dubBtn').classList.toggle('active', cat==='dub');
+  document.getElementById('subBtn').classList.toggle('active', cat==='sub');
+  document.getElementById('dubBtn').classList.toggle('active', cat==='dub');
   activeEpIdx = -1;
   if (window._providers) {
     currentEpisodes = getEpList(window._providers, currentProvider, cat);
-    $('epCountBadge').textContent = currentEpisodes.length;
+    document.getElementById('epCountBadge').textContent = currentEpisodes.length;
     renderEpList(currentEpisodes);
-    $('videoContainer').innerHTML = `<div class="video-placeholder">
+    document.getElementById('videoContainer').innerHTML = `<div class="video-placeholder">
       <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
       <span style="font-size:13px">Select an episode to stream</span>
     </div>`;
-    $('watchingTitle').textContent = '—';
+    document.getElementById('watchingTitle').textContent = '—';
   }
 }
 
-// ── SEARCH ──
+// ── SEARCH ────────────────────────────────────────────────────────────────────
+let searchTimeout = null, filterState = { sort: 'POPULARITY_DESC' };
+
 async function handleSearch(q) {
   clearTimeout(searchTimeout);
   if (q.length < 2) return;
   searchTimeout = setTimeout(async () => {
     showView('sectionView');
-    $('sectionBreadcrumb').textContent = `Search: "${q}"`;
-    $('sectionTitle').textContent = `🔍 Results for "${q}"`;
-    $('loadMoreBtn').style.display = 'none';
-    skeletonCards(12, $('sectionGrid'));
+    document.getElementById('sectionBreadcrumb').textContent = `Search: "${q}"`;
+    document.getElementById('sectionTitle').textContent = `🔍 Results for "${q}"`;
+    document.getElementById('loadMoreBtn').style.display = 'none';
+    skeletonCards(12, document.getElementById('sectionGrid'));
     try {
       const data = await fetchAPI(`/search?query=${encodeURIComponent(q)}&per_page=24`);
-      $('sectionGrid').innerHTML = '';
-      (data.results||[]).forEach(a => $('sectionGrid').appendChild(buildCard(a)));
+      document.getElementById('sectionGrid').innerHTML = '';
+      (data.results||[]).forEach(a => document.getElementById('sectionGrid').appendChild(buildCard(a)));
       if (!data.results?.length) {
-        $('sectionGrid').innerHTML = '<div style="padding:48px;text-align:center;color:var(--text3);grid-column:1/-1">No results found.</div>';
+        document.getElementById('sectionGrid').innerHTML = '<div style="padding:48px;text-align:center;color:var(--text3);grid-column:1/-1">No results found.</div>';
       }
     } catch(e) { showToast('Search failed.'); }
   }, 400);
 }
 
-// ── FILTER ──
+// ── FILTER ────────────────────────────────────────────────────────────────────
 const GENRES = ['Action','Adventure','Comedy','Drama','Ecchi','Fantasy','Horror','Mahou Shoujo','Mecha','Music','Mystery','Psychological','Romance','Sci-Fi','Slice of Life','Sports','Supernatural','Thriller'];
 
 function openFilter() {
-  const chips = $('genreChips');
+  const chips = document.getElementById('genreChips');
   if (!chips.children.length) {
     chips.innerHTML = GENRES.map(g => `<button class="chip" onclick="toggleFilter('genre','${g}',this)">${g}</button>`).join('');
   }
-  $('filterModal').classList.add('open');
+  document.getElementById('filterModal').classList.add('open');
 }
-function closeFilter() { $('filterModal').classList.remove('open'); }
+function closeFilter() { document.getElementById('filterModal').classList.remove('open'); }
 
 function toggleFilter(key, val, el) {
   if (key === 'sort') {
-    document.querySelectorAll('#filterModal .filter-chips').forEach(row => {
-      Array.from(row.children).filter(c => c.onclick?.toString().includes("'sort'")).forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('#filterModal .chip').forEach(c => {
+      if (c.onclick?.toString().includes("'sort'")) c.classList.remove('active');
     });
     el.classList.add('active');
     filterState[key] = val;
@@ -1348,24 +1383,26 @@ function toggleFilter(key, val, el) {
 async function applyFilter() {
   closeFilter();
   showView('sectionView');
-  $('sectionBreadcrumb').textContent = 'Filter Results';
-  $('sectionTitle').textContent = '🎯 Filter Results';
-  $('loadMoreBtn').style.display = 'none';
-  skeletonCards(20, $('sectionGrid'));
+  document.getElementById('sectionBreadcrumb').textContent = 'Filter Results';
+  document.getElementById('sectionTitle').textContent = '🎯 Filter Results';
+  document.getElementById('loadMoreBtn').style.display = 'none';
+  skeletonCards(20, document.getElementById('sectionGrid'));
   const params = new URLSearchParams({ per_page: 20, ...filterState });
   try {
     const data = await fetchAPI(`/filter?${params}`);
-    $('sectionGrid').innerHTML = '';
-    (data.results||[]).forEach(a => $('sectionGrid').appendChild(buildCard(a)));
+    document.getElementById('sectionGrid').innerHTML = '';
+    (data.results||[]).forEach(a => document.getElementById('sectionGrid').appendChild(buildCard(a)));
     if (!data.results?.length) {
-      $('sectionGrid').innerHTML = '<div style="padding:48px;text-align:center;color:var(--text3);grid-column:1/-1">No results for these filters.</div>';
+      document.getElementById('sectionGrid').innerHTML = '<div style="padding:48px;text-align:center;color:var(--text3);grid-column:1/-1">No results for these filters.</div>';
     }
   } catch(e) { showToast('Filter failed.'); }
 }
 
-$('filterModal').addEventListener('click', e => { if (e.target === $('filterModal')) closeFilter(); });
+document.getElementById('filterModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('filterModal')) closeFilter();
+});
 
-// ── INIT ──
+// ── INIT ──────────────────────────────────────────────────────────────────────
 updateProxyStatus();
 if (!PROXY_URL) {
   setTimeout(() => openProxyModal(), 800);
