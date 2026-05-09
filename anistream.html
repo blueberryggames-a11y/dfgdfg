@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AniStream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.7/hls.min.js"></script>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #18181f;
+  --bg4: #1e1e28;
+  --border: rgba(255,255,255,0.06);
+  --accent: #e8401c;
+  --accent2: #ff6b35;
+  --accent-glow: rgba(232,64,28,0.3);
+  --text: #f0f0f5;
+  --text2: #9090a8;
+  --text3: #5a5a72;
+  --green: #2ecc71;
+  --card-radius: 10px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; gap: 24px;
+  padding: 0 32px; height: 64px;
+  background: linear-gradient(to bottom, rgba(10,10,15,0.98), rgba(10,10,15,0.85));
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px; letter-spacing: 2px; color: var(--text); flex-shrink: 0;
+}
+.logo span { color: var(--accent); }
+
+.nav-links { display: flex; gap: 6px; list-style: none; }
+.nav-links a {
+  color: var(--text2); text-decoration: none;
+  font-size: 13px; font-weight: 500;
+  padding: 6px 14px; border-radius: 6px; transition: all .2s; cursor: pointer;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--text); background: var(--bg3); }
+
+.search-bar {
+  flex: 1; max-width: 420px;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0 14px; height: 38px; transition: border-color .2s;
+}
+.search-bar:focus-within { border-color: var(--accent); }
+.search-bar input {
+  background: none; border: none; outline: none;
+  color: var(--text); font-family: inherit; font-size: 13px; width: 100%;
+}
+.search-bar input::placeholder { color: var(--text3); }
+.search-bar svg { color: var(--text3); flex-shrink: 0; }
+
+.nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.filter-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); font-family: inherit; font-size: 12px; font-weight: 600;
+  padding: 7px 14px; border-radius: 7px; cursor: pointer; transition: all .2s; letter-spacing: .5px;
+}
+.filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── CONFIG BANNER ── */
+#configBanner {
+  position: fixed; top: 64px; left: 0; right: 0; z-index: 99;
+  background: rgba(232,64,28,0.12); border-bottom: 1px solid rgba(232,64,28,0.3);
+  padding: 8px 32px; display: flex; align-items: center; gap: 12px;
+  font-size: 12px; color: var(--text2);
+}
+#configBanner.hidden { display: none; }
+#configBanner a { color: var(--accent); cursor: pointer; text-decoration: underline; }
+#configBanner button {
+  margin-left: auto; background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px;
+}
+
+/* ── PROXY CONFIG MODAL ── */
+#proxyModal {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
+  display: none; align-items: center; justify-content: center;
+}
+#proxyModal.open { display: flex; }
+.proxy-modal-box {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 32px; width: 560px; max-width: 95vw;
+}
+.proxy-modal-box h2 {
+  font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.proxy-modal-box p { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 20px; }
+.proxy-input-row {
+  display: flex; gap: 10px; margin-bottom: 14px;
+}
+.proxy-input-row input {
+  flex: 1; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 14px; color: var(--text);
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; outline: none;
+  transition: border-color .2s;
+}
+.proxy-input-row input:focus { border-color: var(--accent); }
+.proxy-save-btn {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 8px; padding: 10px 22px; font-family: inherit;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: background .2s; white-space: nowrap;
+}
+.proxy-save-btn:hover { background: var(--accent2); }
+.proxy-steps {
+  background: var(--bg3); border-radius: 8px; padding: 16px;
+  font-size: 12px; color: var(--text2); line-height: 1.9;
+  border: 1px solid var(--border);
+}
+.proxy-steps strong { color: var(--text); }
+.proxy-steps code {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  background: var(--bg4); padding: 1px 6px; border-radius: 4px; color: var(--accent2);
+}
+.proxy-skip { font-size: 11px; color: var(--text3); margin-top: 14px; cursor: pointer; text-decoration: underline; }
+.proxy-skip:hover { color: var(--text2); }
+
+main { padding-top: 64px; }
+
+.hero {
+  position: relative; height: 560px; overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center top; transition: opacity .6s ease;
+}
+.hero-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(10,10,15,1) 0%, rgba(10,10,15,0.85) 35%,
+    rgba(10,10,15,0.3) 65%, rgba(10,10,15,0.1) 100%
+  ),
+  linear-gradient(to top, rgba(10,10,15,1) 0%, transparent 40%);
+}
+.hero-content { position: relative; z-index: 2; padding: 80px 48px; max-width: 600px; }
+.hero-badges { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.badge { font-size: 10px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; padding: 3px 9px; border-radius: 4px; }
+.badge-cc { background: rgba(232,64,28,0.2); color: var(--accent); border: 1px solid rgba(232,64,28,0.3); }
+.badge-ep { background: rgba(46,204,113,0.15); color: var(--green); border: 1px solid rgba(46,204,113,0.25); }
+.badge-format { background: var(--bg4); color: var(--text2); border: 1px solid var(--border); }
+.hero h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(38px, 5vw, 58px); line-height: 1; letter-spacing: 1px; margin-bottom: 12px;
+}
+.hero-meta { display: flex; align-items: center; gap: 12px; color: var(--text2); font-size: 13px; margin-bottom: 14px; }
+.hero-meta .dot { width: 3px; height: 3px; background: var(--text3); border-radius: 50%; }
+.hero-desc {
+  color: var(--text2); font-size: 14px; line-height: 1.7; margin-bottom: 28px;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.hero-stats { display: flex; gap: 24px; margin-bottom: 28px; }
+.stat { display: flex; flex-direction: column; gap: 2px; }
+.stat-label { font-size: 10px; color: var(--text3); letter-spacing: .8px; text-transform: uppercase; }
+.stat-value { font-size: 18px; font-weight: 600; color: var(--text); }
+.hero-actions { display: flex; gap: 12px; align-items: center; }
+.btn-watch {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--accent); color: #fff; border: none; border-radius: 8px;
+  padding: 12px 26px; font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all .2s; box-shadow: 0 4px 20px var(--accent-glow);
+}
+.btn-watch:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 6px 28px var(--accent-glow); }
+.btn-info {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg4); color: var(--text2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 22px; font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .2s;
+}
+.btn-info:hover { border-color: var(--text3); color: var(--text); }
+.hero-dots { position: absolute; bottom: 28px; left: 48px; display: flex; gap: 6px; z-index: 3; }
+.dot-item {
+  width: 6px; height: 6px; border-radius: 3px; background: var(--text3); cursor: pointer; transition: all .3s;
+}
+.dot-item.active { width: 24px; background: var(--accent); }
+
+.section { padding: 40px 32px 0; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.section-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1.5px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title::before {
+  content: ''; display: block; width: 4px; height: 22px; border-radius: 2px; background: var(--accent);
+}
+.see-all { font-size: 12px; color: var(--accent); cursor: pointer; font-weight: 500; letter-spacing: .3px; text-decoration: none; transition: opacity .2s; }
+.see-all:hover { opacity: .7; }
+
+.tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+.tab {
+  font-size: 12px; font-weight: 600; letter-spacing: .5px; padding: 6px 16px; border-radius: 6px;
+  cursor: pointer; border: 1px solid var(--border); color: var(--text2); background: none; font-family: inherit; transition: all .2s;
+}
+.tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.tab:hover:not(.active) { border-color: var(--text3); color: var(--text); }
+
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 16px; }
+
+.anime-card {
+  cursor: pointer; border-radius: var(--card-radius); overflow: hidden;
+  background: var(--bg2); border: 1px solid var(--border);
+  transition: transform .25s, box-shadow .25s; position: relative;
+}
+.anime-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.12); }
+.card-poster { position: relative; aspect-ratio: 2/3; overflow: hidden; }
+.card-poster img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
+.anime-card:hover .card-poster img { transform: scale(1.06); }
+.card-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(10,10,15,0.95) 0%, transparent 50%);
+  opacity: 0; transition: opacity .3s; display: flex; align-items: center; justify-content: center;
+}
+.anime-card:hover .card-overlay { opacity: 1; }
+.play-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--accent); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px var(--accent-glow); transform: scale(0.8); transition: transform .2s;
+}
+.anime-card:hover .play-btn { transform: scale(1); }
+.card-score {
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(10,10,15,0.85); backdrop-filter: blur(6px); border: 1px solid var(--border);
+  border-radius: 5px; padding: 2px 7px; font-size: 11px; font-weight: 600;
+  font-family: 'JetBrains Mono', monospace; color: #f1c40f;
+}
+.card-ep-count {
+  position: absolute; bottom: 8px; left: 8px; background: rgba(232,64,28,0.9);
+  border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 600; color: #fff; letter-spacing: .3px;
+}
+.card-info { padding: 10px 10px 12px; }
+.card-title { font-size: 13px; font-weight: 500; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
+.card-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text3); }
+.card-meta .sep { width: 2px; height: 2px; border-radius: 50%; background: var(--text3); }
+
+.watch-layout { display: none; padding: 20px 32px 40px; gap: 24px; }
+.watch-layout.visible { display: flex; }
+.watch-left { flex: 1; min-width: 0; }
+.video-container {
+  background: #000; border-radius: 10px; aspect-ratio: 16/9; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); position: relative;
+}
+.video-placeholder { display: flex; flex-direction: column; align-items: center; gap: 16px; color: var(--text2); }
+.video-placeholder svg { opacity: .4; }
+.video-title-bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 10px; }
+.watching-label { font-size: 12px; color: var(--text3); }
+.watching-title { font-size: 16px; font-weight: 600; margin-top: 2px; }
+
+.server-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 12px 0; border-top: 1px solid var(--border); margin-bottom: 12px;
+}
+.server-label { font-size: 11px; color: var(--text3); letter-spacing: .5px; text-transform: uppercase; }
+.server-btn {
+  font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 6px; border: 1px solid var(--border);
+  background: none; color: var(--text2); font-family: inherit; cursor: pointer; transition: all .2s;
+}
+.server-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.server-btn:hover:not(.active) { border-color: var(--text3); color: var(--text); }
+.server-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+.sub-dub-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.sub-dub-btn {
+  font-size: 11px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase;
+  padding: 5px 14px; border-radius: 6px; border: 1px solid var(--border);
+  background: none; color: var(--text3); font-family: inherit; cursor: pointer; transition: all .2s;
+}
+.sub-dub-btn.active { background: var(--bg4); color: var(--text); border-color: var(--text3); }
+
+.anime-detail-info { display: flex; gap: 20px; padding: 20px 0; border-top: 1px solid var(--border); margin-top: 8px; }
+.detail-poster { width: 90px; flex-shrink: 0; border-radius: 8px; overflow: hidden; }
+.detail-poster img { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
+.detail-text { flex: 1; }
+.detail-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+.detail-alt { font-size: 12px; color: var(--text3); margin-bottom: 10px; }
+.detail-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.detail-tag {
+  font-size: 10px; font-weight: 600; letter-spacing: .5px; padding: 3px 9px; border-radius: 4px;
+  background: var(--bg4); color: var(--text2); border: 1px solid var(--border);
+}
+.detail-desc { font-size: 13px; color: var(--text2); line-height: 1.7; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; margin-top: 14px; }
+.detail-row { font-size: 12px; color: var(--text2); }
+.detail-row span:first-child { color: var(--text3); margin-right: 6px; }
+
+.ep-panel {
+  width: 300px; flex-shrink: 0; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; max-height: 700px;
+}
+.ep-panel-header {
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ep-panel-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; }
+.ep-count-badge {
+  font-size: 11px; background: var(--bg3); color: var(--text3); padding: 2px 8px;
+  border-radius: 4px; border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace;
+}
+.ep-search { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.ep-search input {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 7px 12px; color: var(--text); font-family: inherit; font-size: 12px; outline: none; transition: border-color .2s;
+}
+.ep-search input:focus { border-color: var(--accent); }
+.ep-search input::placeholder { color: var(--text3); }
+.ep-list { overflow-y: auto; flex: 1; padding: 8px; }
+.ep-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 7px;
+  cursor: pointer; transition: background .15s; margin-bottom: 2px;
+}
+.ep-item:hover { background: var(--bg3); }
+.ep-item.active { background: rgba(232,64,28,0.12); border: 1px solid rgba(232,64,28,0.2); }
+.ep-num {
+  width: 32px; height: 32px; border-radius: 6px; background: var(--bg4); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: var(--text3); flex-shrink: 0;
+}
+.ep-item.active .ep-num { background: var(--accent); color: #fff; border-color: var(--accent); }
+.ep-info { flex: 1; min-width: 0; }
+.ep-title { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ep-date { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.ep-thumb { width: 52px; height: 34px; border-radius: 5px; object-fit: cover; flex-shrink: 0; background: var(--bg4); }
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+  background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+.card-skeleton { border-radius: var(--card-radius); overflow: hidden; background: var(--bg2); border: 1px solid var(--border); }
+.card-skeleton .sk-img { aspect-ratio: 2/3; }
+.card-skeleton .sk-line { height: 12px; margin: 10px 10px 6px; }
+.card-skeleton .sk-line2 { height: 10px; width: 60%; margin: 0 10px 14px; }
+
+.scroll-row { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.scroll-row::-webkit-scrollbar { display: none; }
+.scroll-row .anime-card { flex: 0 0 155px; }
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 28px;
+  width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+}
+.modal-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px;
+  margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;
+}
+.modal-close { cursor: pointer; color: var(--text3); background: none; border: none; font-size: 20px; }
+.filter-group { margin-bottom: 18px; }
+.filter-group-label { font-size: 10px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; }
+.filter-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-size: 11px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);
+  background: none; color: var(--text2); cursor: pointer; font-family: inherit; transition: all .15s;
+}
+.chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.chip:hover:not(.active) { border-color: var(--text3); color: var(--text); }
+.apply-btn {
+  width: 100%; padding: 12px; background: var(--accent); color: #fff; border: none;
+  border-radius: 8px; font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer; margin-top: 10px; transition: background .2s;
+}
+.apply-btn:hover { background: var(--accent2); }
+
+.breadcrumb {
+  display: flex; align-items: center; gap: 8px; padding: 16px 32px;
+  font-size: 12px; color: var(--text3); border-bottom: 1px solid var(--border);
+}
+.breadcrumb a { color: var(--text2); cursor: pointer; text-decoration: none; }
+.breadcrumb a:hover { color: var(--accent); }
+.breadcrumb svg { width: 12px; height: 12px; }
+
+.view { display: none; }
+.view.active { display: block; }
+
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 999;
+  background: var(--bg3); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--text);
+  transform: translateY(80px); opacity: 0; transition: all .3s; pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* Loading spinner */
+.spinner {
+  width: 40px; height: 40px; border: 3px solid var(--bg4);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 768px) {
+  nav { padding: 0 16px; }
+  .nav-links { display: none; }
+  .hero-content { padding: 60px 20px; }
+  .section { padding: 28px 16px 0; }
+  .watch-layout { flex-direction: column; padding: 16px; }
+  .ep-panel { width: 100%; max-height: 400px; }
+  #configBanner { padding: 8px 16px; flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<!-- CONFIG BANNER -->
+<div id="configBanner">
+  ⚠️ CORS proxy not configured — streams may fail.
+  <a onclick="openProxyModal()">Set up proxy</a> to enable playback.
+  <button onclick="document.getElementById('configBanner').classList.add('hidden')">✕</button>
+</div>
+
+<!-- PROXY CONFIG MODAL -->
+<div id="proxyModal">
+  <div class="proxy-modal-box">
+    <h2>🔧 Configure CORS Proxy</h2>
+    <p>
+      Streams are blocked by your browser due to CORS restrictions. You need a small proxy to relay HLS streams.
+      Deploy the included <strong>cloudflare-worker.js</strong> and paste your Worker URL below.
+    </p>
+
+    <div class="proxy-steps">
+      <strong>Quick setup (2 min):</strong><br>
+      1. Go to <strong>workers.cloudflare.com</strong> → Sign up free → Create Worker<br>
+      2. Paste the contents of <code>cloudflare-worker.js</code> → Deploy<br>
+      3. Copy your Worker URL (e.g. <code>https://anistream-proxy.yourname.workers.dev</code>)<br>
+      4. Paste it below and save<br><br>
+      <strong>Or use the existing public proxy (rate-limited):</strong><br>
+      <code>https://corsproxy.io/?</code> — works but may be slow
+    </div>
+
+    <br>
+    <div class="proxy-input-row">
+      <input type="text" id="proxyUrlInput" placeholder="https://anistream-proxy.yourname.workers.dev">
+      <button class="proxy-save-btn" onclick="saveProxyUrl()">Save</button>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="proxy-save-btn" style="background:var(--bg4);color:var(--text2);border:1px solid var(--border)"
+        onclick="usePublicProxy()">Use Public Proxy (slow)</button>
+      <button class="proxy-save-btn" style="background:var(--bg4);color:var(--text2);border:1px solid var(--border)"
+        onclick="skipProxy()">Skip (local only)</button>
+    </div>
+    <div class="proxy-skip" onclick="document.getElementById('proxyModal').classList.remove('open')">
+      Close without saving
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Ani<span>Stream</span></div>
+  <ul class="nav-links">
+    <li><a class="active" onclick="showHome()">Home</a></li>
+    <li><a onclick="loadSection('trending')">Trending</a></li>
+    <li><a onclick="loadSection('popular')">Popular</a></li>
+    <li><a onclick="loadSection('recent')">Airing</a></li>
+    <li><a onclick="loadSection('upcoming')">Upcoming</a></li>
+  </ul>
+  <div class="search-bar">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search anime..." id="searchInput" oninput="handleSearch(this.value)">
+  </div>
+  <div class="nav-right">
+    <button class="filter-btn" onclick="openFilter()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      FILTER
+    </button>
+    <button class="filter-btn" onclick="openProxyModal()" title="Configure proxy">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      PROXY
+    </button>
+  </div>
+</nav>
+
+<!-- HOME VIEW -->
+<div class="view active" id="homeView">
+  <div class="hero" id="heroSection">
+    <div class="hero-bg" id="heroBg"></div>
+    <div class="hero-content">
+      <div class="hero-badges" id="heroBadges"></div>
+      <h1 id="heroTitle">Loading...</h1>
+      <div class="hero-meta" id="heroMeta"></div>
+      <p class="hero-desc" id="heroDesc"></p>
+      <div class="hero-stats" id="heroStats"></div>
+      <div class="hero-actions">
+        <button class="btn-watch" onclick="watchFromHero()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          WATCH NOW
+        </button>
+        <button class="btn-info" onclick="openDetail(currentSpotlight)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          More Info
+        </button>
+      </div>
+    </div>
+    <div class="hero-dots" id="heroDots"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">🔥 Trending Now</div>
+      <a class="see-all" onclick="loadSection('trending')">See All →</a>
+    </div>
+    <div class="scroll-row" id="trendingRow"></div>
+  </div>
+
+  <div class="section" style="margin-top:36px">
+    <div class="section-header">
+      <div class="section-title">📡 Currently Airing</div>
+      <a class="see-all" onclick="loadSection('recent')">See All →</a>
+    </div>
+    <div class="scroll-row" id="recentRow"></div>
+  </div>
+
+  <div class="section" style="margin-top:36px; padding-bottom:48px">
+    <div class="section-header">
+      <div class="section-title">⭐ All-Time Popular</div>
+      <a class="see-all" onclick="loadSection('popular')">See All →</a>
+    </div>
+    <div class="card-grid" id="popularGrid"></div>
+  </div>
+</div>
+
+<!-- SECTION VIEW -->
+<div class="view" id="sectionView">
+  <div class="breadcrumb">
+    <a onclick="showHome()">Home</a>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    <span id="sectionBreadcrumb">Section</span>
+  </div>
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title" id="sectionTitle"></div>
+    </div>
+    <div class="card-grid" id="sectionGrid"></div>
+    <button id="loadMoreBtn" onclick="loadMoreSection()" style="
+      display:block; margin:28px auto 48px;
+      background:var(--bg3); border:1px solid var(--border);
+      color:var(--text2); font-family:inherit; font-size:13px; font-weight:600;
+      padding:11px 32px; border-radius:8px; cursor:pointer; transition:all .2s;"
+      onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">
+      Load More
+    </button>
+  </div>
+</div>
+
+<!-- WATCH VIEW -->
+<div class="view" id="watchView">
+  <div class="breadcrumb">
+    <a onclick="showHome()">Home</a>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    <a id="watchBreadAnime" onclick="goBackToDetail()">Anime</a>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    <span id="watchBreadEp">Episode</span>
+  </div>
+  <div class="watch-layout visible">
+    <div class="watch-left">
+      <div class="video-container" id="videoContainer">
+        <div class="video-placeholder">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span style="font-size:13px">Select an episode to stream</span>
+        </div>
+      </div>
+      <div class="video-title-bar">
+        <div>
+          <div class="watching-label">YOU ARE WATCHING</div>
+          <div class="watching-title" id="watchingTitle">—</div>
+        </div>
+        <div style="font-size:11px;color:var(--text3)" id="proxyStatusLabel"></div>
+      </div>
+      <div class="server-row">
+        <span class="server-label">SERVER:</span>
+        <button class="server-btn active" id="serverBtn1" onclick="switchServer(0,this)">Server 1</button>
+        <button class="server-btn" id="serverBtn2" onclick="switchServer(1,this)">Server 2</button>
+        <div style="margin-left:auto; display:flex; gap:8px;">
+          <button class="sub-dub-btn active" id="subBtn" onclick="switchCategory('sub')">SUB</button>
+          <button class="sub-dub-btn" id="dubBtn" onclick="switchCategory('dub')">DUB</button>
+        </div>
+      </div>
+      <div class="anime-detail-info" id="watchDetailInfo"></div>
+    </div>
+    <div class="ep-panel">
+      <div class="ep-panel-header">
+        <div class="ep-panel-title">EPISODES</div>
+        <span class="ep-count-badge" id="epCountBadge">0</span>
+      </div>
+      <div class="ep-search">
+        <input type="text" placeholder="Find episode..." oninput="filterEpisodes(this.value)" id="epSearchInput">
+      </div>
+      <div class="ep-list" id="epList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FILTER MODAL -->
+<div class="modal-overlay" id="filterModal">
+  <div class="modal">
+    <div class="modal-title">
+      FILTER ANIME
+      <button class="modal-close" onclick="closeFilter()">✕</button>
+    </div>
+    <div class="filter-group">
+      <div class="filter-group-label">Genre</div>
+      <div class="filter-chips" id="genreChips"></div>
+    </div>
+    <div class="filter-group">
+      <div class="filter-group-label">Format</div>
+      <div class="filter-chips">
+        <button class="chip" onclick="toggleFilter('format','TV',this)">TV</button>
+        <button class="chip" onclick="toggleFilter('format','MOVIE',this)">Movie</button>
+        <button class="chip" onclick="toggleFilter('format','OVA',this)">OVA</button>
+        <button class="chip" onclick="toggleFilter('format','ONA',this)">ONA</button>
+        <button class="chip" onclick="toggleFilter('format','SPECIAL',this)">Special</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <div class="filter-group-label">Season</div>
+      <div class="filter-chips">
+        <button class="chip" onclick="toggleFilter('season','WINTER',this)">❄️ Winter</button>
+        <button class="chip" onclick="toggleFilter('season','SPRING',this)">🌸 Spring</button>
+        <button class="chip" onclick="toggleFilter('season','SUMMER',this)">☀️ Summer</button>
+        <button class="chip" onclick="toggleFilter('season','FALL',this)">🍂 Fall</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <div class="filter-group-label">Sort By</div>
+      <div class="filter-chips">
+        <button class="chip active" onclick="toggleFilter('sort','POPULARITY_DESC',this)">Most Popular</button>
+        <button class="chip" onclick="toggleFilter('sort','SCORE_DESC',this)">Highest Rated</button>
+        <button class="chip" onclick="toggleFilter('sort','TRENDING_DESC',this)">Trending</button>
+        <button class="chip" onclick="toggleFilter('sort','START_DATE_DESC',this)">Newest</button>
+      </div>
+    </div>
+    <button class="apply-btn" onclick="applyFilter()">Apply Filters</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── PROXY CONFIG ──
+let PROXY_URL = localStorage.getItem('anistream_proxy') || '';
+
+// When a Cloudflare Worker is configured, ALL requests go through it —
+// the worker forwards API routes to your local tunnel AND handles HLS CORS.
+// On localhost we skip the worker and hit the local API directly.
+function getAPIBase() {
+  const h = window.location.hostname;
+  const proto = window.location.protocol;
+  // Localhost — hit API directly
+  if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:8000';
+  // file:// or any remote origin — must go through the worker
+  const saved = localStorage.getItem('anistream_proxy') || '';
+  if (saved && (saved.includes('workers.dev') || localStorage.getItem('anistream_proxy_type') === 'worker')) {
+    return saved.replace(/\/$/, '');
+  }
+  return localStorage.getItem('anistream_api') || 'http://localhost:8000';
+}
+const API_URL = getAPIBase();
+
+// Warn if opened as file:// — all requests will be blocked by CORS
+if (window.location.protocol === 'file:') {
+  const banner = document.getElementById('configBanner');
+  if (banner) {
+    banner.innerHTML = '⚠️ Opened as a local file — CORS will block all requests. ' +
+      '<strong>Set up your Cloudflare Worker proxy</strong> or serve via a local web server. ' +
+      '<a onclick="openProxyModal()">Configure proxy →</a>' +
+      '<button onclick="this.parentElement.classList.add(\'hidden\')">✕</button>';
+    banner.classList.remove('hidden');
+    banner.style.background = 'rgba(232,64,28,0.2)';
+  }
+}
+
+// ── FIX 1: fetchWithTimeout — prevents infinite loading on slow/dead API ──
+async function fetchWithTimeout(url, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    return res.json();
+  } catch (err) {
+    clearTimeout(timer);
+    if (err.name === 'AbortError') throw new Error('Request timed out after ' + (timeoutMs/1000) + 's');
+    throw err;
+  }
+}
+
+function getProxiedUrl(url) {
+  if (!url) return url;
+  // If API_URL is the worker, route HLS through its /proxy endpoint
+  if (API_URL && (API_URL.includes('workers.dev') || localStorage.getItem('anistream_proxy_type') === 'worker')) {
+    return `${API_URL}/proxy?url=${encodeURIComponent(url)}`;
+  }
+  // Fall back to a separately configured PROXY_URL (e.g. corsproxy.io)
+  if (!PROXY_URL) return url;
+  const base = PROXY_URL.replace(/\/$/, '');
+  if (localStorage.getItem('anistream_proxy_type') === 'worker') {
+    return `${base}/proxy?url=${encodeURIComponent(url)}`;
+  }
+  return `${base}${url}`; // generic CORS proxy like corsproxy.io
+}
+
+function openProxyModal() {
+  const input = document.getElementById('proxyUrlInput');
+  if (PROXY_URL) input.value = PROXY_URL;
+  document.getElementById('proxyModal').classList.add('open');
+}
+
+function saveProxyUrl() {
+  const val = document.getElementById('proxyUrlInput').value.trim();
+  if (!val) { showToast('Enter a proxy URL first'); return; }
+  PROXY_URL = val;
+  localStorage.setItem('anistream_proxy', val);
+  localStorage.setItem('anistream_proxy_type', 'worker');
+  document.getElementById('proxyModal').classList.remove('open');
+  document.getElementById('configBanner').classList.add('hidden');
+  updateProxyStatus();
+  // Reload so API_URL picks up the new worker base
+  showToast('✅ Proxy saved! Reloading...');
+  setTimeout(() => location.reload(), 1200);
+}
+
+function usePublicProxy() {
+  PROXY_URL = 'https://corsproxy.io/?';
+  localStorage.setItem('anistream_proxy', PROXY_URL);
+  localStorage.setItem('anistream_proxy_type', 'generic');
+  document.getElementById('proxyModal').classList.remove('open');
+  document.getElementById('configBanner').classList.add('hidden');
+  updateProxyStatus();
+  showToast('Using public proxy (may be slow)');
+}
+
+function skipProxy() {
+  PROXY_URL = '';
+  localStorage.removeItem('anistream_proxy');
+  document.getElementById('proxyModal').classList.remove('open');
+  showToast('No proxy set — only works on localhost');
+}
+
+function updateProxyStatus() {
+  const lbl = document.getElementById('proxyStatusLabel');
+  if (!lbl) return;
+  if (PROXY_URL) {
+    const short = PROXY_URL.length > 40 ? PROXY_URL.slice(0, 40) + '…' : PROXY_URL;
+    lbl.textContent = `🟢 Proxy: ${short}`;
+    document.getElementById('configBanner').classList.add('hidden');
+  } else {
+    lbl.textContent = '🔴 No proxy';
+  }
+}
+
+// ── STATE ──
+let spotlightData = [], currentSpotlightIdx = 0, currentSpotlight = null, spotlightTimer = null;
+let currentAnime = null, currentEpisodes = [], currentCategory = 'sub';
+let currentProvider = null, activeEpIdx = -1;
+let sectionPage = 1, sectionType = 'trending', sectionHasMore = true;
+let filterState = { sort: 'POPULARITY_DESC' };
+let searchTimeout = null;
+let currentStreams = [];
+let activeStreamIdx = 0;
+
+// ── FIX 2: AbortController to cancel stale episode requests ──
+let _activeEpController = null;
+
+const $ = id => document.getElementById(id);
+
+async function fetchAPI(path) {
+  return fetchWithTimeout(`${API_URL}${path}`);
+}
+
+function stripHtml(s) { return s ? s.replace(/<[^>]*>/g,'').replace(/&[^;]+;/g,' ') : ''; }
+function scoreColor(s) { if (!s) return 'var(--text3)'; if (s >= 80) return '#2ecc71'; if (s >= 65) return '#f1c40f'; return '#e74c3c'; }
+
+function showToast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function skeletonCards(n, container) {
+  container.innerHTML = Array(n).fill(`
+    <div class="card-skeleton">
+      <div class="sk-img skeleton"></div>
+      <div class="sk-line skeleton"></div>
+      <div class="sk-line2 skeleton"></div>
+    </div>`).join('');
+}
+
+function buildCard(anime) {
+  const title = anime.title?.english || anime.title?.romaji || 'Unknown';
+  const cover = anime.coverImage?.extraLarge || anime.coverImage?.large || '';
+  const score = anime.averageScore || anime.meanScore;
+  const eps = anime.episodes;
+  const year = anime.startDate?.year;
+  const format = anime.format || '';
+  const card = document.createElement('div');
+  card.className = 'anime-card';
+  card.innerHTML = `
+    <div class="card-poster">
+      <img src="${cover}" alt="${title}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22300%22><rect fill=%22%2318181f%22 width=%22200%22 height=%22300%22/></svg>'">
+      ${score ? `<div class="card-score" style="color:${scoreColor(score)}">★ ${(score/10).toFixed(1)}</div>` : ''}
+      ${eps ? `<div class="card-ep-count">${eps} EP</div>` : ''}
+      <div class="card-overlay">
+        <button class="play-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-title">${title}</div>
+      <div class="card-meta">
+        <span>${format}</span>
+        ${year ? `<span class="sep"></span><span>${year}</span>` : ''}
+      </div>
+    </div>`;
+  card.onclick = () => openDetail(anime);
+  return card;
+}
+
+// ── SPOTLIGHT ──
+async function loadSpotlight() {
+  try {
+    const data = await fetchAPI('/spotlight');
+    spotlightData = data.results || [];
+    if (!spotlightData.length) return;
+    renderSpotlightDots();
+    setSpotlight(0);
+    startSpotlightTimer();
+  } catch(e) { console.error('Spotlight error', e); }
+}
+
+function renderSpotlightDots() {
+  $('heroDots').innerHTML = spotlightData.slice(0,10).map((_,i) =>
+    `<div class="dot-item${i===0?' active':''}" onclick="setSpotlight(${i})"></div>`
+  ).join('');
+}
+
+function setSpotlight(idx) {
+  currentSpotlightIdx = idx;
+  currentSpotlight = spotlightData[idx];
+  const a = currentSpotlight;
+  $('heroBg').style.backgroundImage = `url('${a.bannerImage || a.coverImage?.extraLarge || ''}')`;
+  $('heroTitle').textContent = a.title?.english || a.title?.romaji || 'Unknown';
+  $('heroBadges').innerHTML = `
+    <span class="badge badge-format">${a.format || 'TV'}</span>
+    ${(a.genres||[]).slice(0,3).map(g=>`<span class="badge badge-ep">${g}</span>`).join('')}`;
+  $('heroMeta').innerHTML = [a.startDate?.year, a.season ? a.season+' '+a.seasonYear : null, a.status?.replace(/_/g,' ')]
+    .filter(Boolean).map((x,i,arr) => i<arr.length-1 ? x+'<span class="dot"></span>' : x).join('');
+  $('heroDesc').textContent = stripHtml(a.description || '').slice(0,200) + (a.description?.length > 200 ? '…' : '');
+  $('heroStats').innerHTML = [
+    a.averageScore ? ['Rating', (a.averageScore/10).toFixed(1)+'/10'] : null,
+    a.episodes ? ['Episodes', a.episodes] : null,
+    a.status ? ['Status', a.status.replace(/_/g,' ')] : null,
+  ].filter(Boolean).map(([l,v])=>`<div class="stat"><div class="stat-label">${l}</div><div class="stat-value">${v}</div></div>`).join('');
+  document.querySelectorAll('.dot-item').forEach((d,i) => d.classList.toggle('active', i===idx));
+}
+
+function startSpotlightTimer() {
+  clearInterval(spotlightTimer);
+  spotlightTimer = setInterval(() => setSpotlight((currentSpotlightIdx+1) % Math.min(spotlightData.length,10)), 6000);
+}
+
+function watchFromHero() { if (currentSpotlight) openDetail(currentSpotlight); }
+
+// ── HOME ──
+async function loadHomeRows() {
+  skeletonCards(8, $('trendingRow'));
+  skeletonCards(8, $('recentRow'));
+  skeletonCards(12, $('popularGrid'));
+  try {
+    const [tr, rc, po] = await Promise.all([
+      fetchAPI('/trending?per_page=12'),
+      fetchAPI('/recent?per_page=12'),
+      fetchAPI('/popular?per_page=12'),
+    ]);
+    $('trendingRow').innerHTML = '';
+    (tr.results||[]).forEach(a => $('trendingRow').appendChild(buildCard(a)));
+    $('recentRow').innerHTML = '';
+    (rc.results||[]).forEach(a => $('recentRow').appendChild(buildCard(a)));
+    $('popularGrid').innerHTML = '';
+    (po.results||[]).forEach(a => $('popularGrid').appendChild(buildCard(a)));
+  } catch(e) {
+    showToast('Failed to load content. Is the API running?');
+    console.error(e);
+  }
+}
+
+// ── VIEWS ──
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  $(id).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function showHome() {
+  showView('homeView');
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  document.querySelector('.nav-links a').classList.add('active');
+}
+
+// ── SECTION ──
+const SECTION_LABELS = { trending:'🔥 Trending', popular:'⭐ Popular', recent:'📡 Currently Airing', upcoming:'🗓 Upcoming' };
+
+async function loadSection(type) {
+  sectionType = type; sectionPage = 1; sectionHasMore = true;
+  showView('sectionView');
+  $('sectionBreadcrumb').textContent = SECTION_LABELS[type] || type;
+  $('sectionTitle').textContent = SECTION_LABELS[type] || type;
+  skeletonCards(20, $('sectionGrid'));
+  $('loadMoreBtn').style.display = 'block';
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.textContent.toLowerCase().includes(type.split('_')[0]));
+  });
+  try {
+    const data = await fetchAPI(`/${type}?per_page=20&page=1`);
+    $('sectionGrid').innerHTML = '';
+    (data.results||[]).forEach(a => $('sectionGrid').appendChild(buildCard(a)));
+    sectionHasMore = data.hasNextPage;
+    if (!sectionHasMore) $('loadMoreBtn').style.display = 'none';
+  } catch(e) { showToast('Failed to load section.'); }
+}
+
+async function loadMoreSection() {
+  if (!sectionHasMore) return;
+  sectionPage++;
+  const btn = $('loadMoreBtn');
+  btn.textContent = 'Loading...'; btn.disabled = true;
+  try {
+    const data = await fetchAPI(`/${sectionType}?per_page=20&page=${sectionPage}`);
+    (data.results||[]).forEach(a => $('sectionGrid').appendChild(buildCard(a)));
+    sectionHasMore = data.hasNextPage;
+    if (!sectionHasMore) btn.style.display = 'none';
+    else { btn.textContent = 'Load More'; btn.disabled = false; }
+  } catch(e) { btn.textContent = 'Load More'; btn.disabled = false; }
+}
+
+// ── WATCH VIEW ──
+async function openDetail(anime) {
+  currentAnime = anime;
+  currentCategory = 'sub';
+  activeEpIdx = -1;
+  showView('watchView');
+  $('watchBreadAnime').textContent = anime.title?.english || anime.title?.romaji || 'Anime';
+  $('watchBreadEp').textContent = 'Episodes';
+  $('watchingTitle').textContent = '—';
+  $('epList').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">Loading episodes...</div>';
+  $('epCountBadge').textContent = '...';
+  $('subBtn').classList.add('active');
+  $('dubBtn').classList.remove('active');
+  renderWatchDetail(anime);
+  updateProxyStatus();
+  await loadEpisodes(anime.id);
+}
+
+function goBackToDetail() {}
+
+function renderWatchDetail(anime) {
+  const title = anime.title?.english || anime.title?.romaji || 'Unknown';
+  const cover = anime.coverImage?.large || '';
+  const desc = stripHtml(anime.description || '').slice(0,300);
+  $('watchDetailInfo').innerHTML = `
+    <div class="detail-poster"><img src="${cover}" alt="${title}"></div>
+    <div class="detail-text">
+      <div class="detail-title">${title}</div>
+      <div class="detail-alt">${anime.title?.romaji || ''}</div>
+      <div class="detail-tags">
+        ${(anime.genres||[]).slice(0,5).map(g=>`<span class="detail-tag">${g}</span>`).join('')}
+        <span class="detail-tag">${anime.format||'TV'}</span>
+        ${anime.status ? `<span class="detail-tag">${anime.status.replace(/_/g,' ')}</span>` : ''}
+      </div>
+      <div class="detail-desc">${desc}${desc.length>=300?'…':''}</div>
+      <div class="detail-grid">
+        ${anime.startDate?.year ? `<div class="detail-row"><span>Premiered</span>${anime.season||''} ${anime.startDate.year}</div>` : ''}
+        ${anime.averageScore ? `<div class="detail-row"><span>Score</span>${(anime.averageScore/10).toFixed(1)} / 10</div>` : ''}
+        ${anime.studios?.nodes?.length ? `<div class="detail-row"><span>Studio</span>${anime.studios.nodes[0].name}</div>` : ''}
+        ${anime.episodes ? `<div class="detail-row"><span>Episodes</span>${anime.episodes}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+// ── EPISODES ──
+async function loadEpisodes(anilistId) {
+  try {
+    const data = await fetchAPI(`/episodes/${anilistId}`);
+    const providers = data.providers || {};
+    const providerOrder = ['kiwi','arc','zoro','jet'];
+    currentProvider = providerOrder.find(p => providers[p]?.episodes?.[currentCategory]?.length) || Object.keys(providers)[0];
+    currentEpisodes = getEpList(providers, currentProvider, currentCategory);
+    $('epCountBadge').textContent = currentEpisodes.length;
+    renderEpList(currentEpisodes);
+    window._providers = providers;
+  } catch(e) {
+    $('epList').innerHTML = `<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">
+      No episodes found.<br>
+      <span style="font-size:11px;color:var(--text3)">${e.message}</span><br><br>
+      Try a different anime.
+    </div>`;
+    $('epCountBadge').textContent = '0';
+    showToast('Could not load episodes: ' + e.message);
+  }
+}
+
+function getEpList(providers, provider, category) {
+  return providers?.[provider]?.episodes?.[category] || [];
+}
+
+function renderEpList(eps) {
+  const list = $('epList');
+  if (!eps.length) {
+    list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px">No episodes available.</div>';
+    return;
+  }
+  list.innerHTML = eps.map((ep,i) => `
+    <div class="ep-item${i===activeEpIdx?' active':''}" onclick="playEpisode(${i})" id="epItem${i}">
+      <div class="ep-num">${ep.number}</div>
+      <div class="ep-info">
+        <div class="ep-title">${ep.title || 'Episode '+ep.number}</div>
+        ${ep.airDate ? `<div class="ep-date">${ep.airDate}</div>` : ''}
+      </div>
+      ${ep.image ? `<img class="ep-thumb" src="${ep.image}" loading="lazy" onerror="this.style.display='none'">` : ''}
+    </div>`).join('');
+}
+
+function filterEpisodes(q) {
+  document.querySelectorAll('#epList .ep-item').forEach(item => {
+    const title = item.querySelector('.ep-title')?.textContent.toLowerCase()||'';
+    const num = item.querySelector('.ep-num')?.textContent||'';
+    item.style.display = (title.includes(q.toLowerCase()) || num.includes(q)) ? '' : 'none';
+  });
+}
+
+let _hlsInstance = null;
+
+// ── playEpisode: fetches stream via the episode's own id path ──
+async function playEpisode(idx) {
+  const ep = currentEpisodes[idx];
+  if (!ep) return;
+
+  // Cancel any previous in-flight stream request
+  if (_activeEpController) {
+    _activeEpController.abort();
+  }
+  _activeEpController = new AbortController();
+  const signal = _activeEpController.signal;
+
+  activeEpIdx = idx;
+  document.querySelectorAll('.ep-item').forEach((el,i) => el.classList.toggle('active', i===idx));
+
+  const epTitle = currentAnime?.title?.english || currentAnime?.title?.romaji || '';
+  $('watchingTitle').textContent = `${epTitle} · Episode ${ep.number}`;
+  $('watchBreadEp').textContent = `Episode ${ep.number}`;
+
+  const epEl = $(`epItem${idx}`);
+  if (epEl) epEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+  const vc = $('videoContainer');
+  vc.innerHTML = `<div class="video-placeholder">
+    <div class="spinner"></div>
+    <span style="font-size:13px;color:var(--text3)">Loading stream…</span>
+  </div>`;
+
+  // Reset server buttons
+  $('serverBtn1').textContent = 'Server 1';
+  $('serverBtn2').textContent = 'Server 2';
+  $('serverBtn1').classList.add('active');
+  $('serverBtn2').classList.remove('active');
+  $('serverBtn1').disabled = false;
+  $('serverBtn2').disabled = true;
+
+  if (!ep.id) {
+    showStreamError(vc, 'Episode has no stream ID.');
+    return;
+  }
+
+  // ep.id is already a path like "watch/kiwi/178005/sub/animepahe-1"
+  // The API endpoint is GET /{that_path} directly — no extra prefix needed.
+  const STREAM_TIMEOUT = 20000;
+  const timer = setTimeout(() => _activeEpController?.abort(), STREAM_TIMEOUT);
+
+  try {
+    const res = await fetch(`${API_URL}/${ep.id}`, { signal });
+    clearTimeout(timer);
+
+    if (!res.ok) throw new Error(`Server returned ${res.status}: ${res.statusText}`);
+
+    const streamData = await res.json();
+
+    if (signal.aborted) return;
+
+    // API returns { sources: [{url, isM3U8, quality}], subtitles, intro, outro }
+    // Normalise all known shapes into a consistent [{url, type, quality}] array.
+    const rawSources = (
+      streamData.sources ||    // ← actual API field name
+      streamData.streams ||
+      streamData.links ||
+      (streamData.url ? [{ url: streamData.url }] : null) ||
+      []
+    );
+
+    // Normalise each source: map isM3U8 → type:'hls', file → url, etc.
+    const streams = rawSources.map(s => ({
+      url:     s.url || s.file || s.link || '',
+      quality: s.quality || s.label || 'auto',
+      type:    (s.isM3U8 || s.type === 'hls' || (s.url||'').includes('.m3u8')) ? 'hls' : 'mp4',
+    })).filter(s => s.url);
+
+    if (!streams.length) {
+      throw new Error('No stream sources in API response');
+    }
+
+    currentStreams = streams;
+    activeStreamIdx = 0;
+
+    const btn1 = $('serverBtn1');
+    const btn2 = $('serverBtn2');
+    btn1.textContent = streams[0]?.quality ? `Server 1 (${streams[0].quality})` : 'Server 1';
+    btn2.textContent = streams[1]?.quality ? `Server 2 (${streams[1].quality})` : streams[1] ? 'Server 2' : 'N/A';
+    btn2.disabled = !streams[1];
+
+    // API subtitles are [{file, label}] — loadStream also handles {url, label}
+    const subtitles = streamData.subtitles || streamData.tracks || [];
+    await loadStream(streams[0], subtitles, streamData.intro, streamData.outro, vc);
+    showToast(`▶ Playing Episode ${ep.number}`);
+
+  } catch(e) {
+    clearTimeout(timer);
+    if (e.name === 'AbortError') {
+      // Either user cancelled or timeout fired
+      if (!signal.aborted) return; // user switched episode — new one will handle it
+      showStreamError(vc, 'Stream request timed out (20s). Check your API server.');
+    } else {
+      showStreamError(vc, e.message);
+    }
+    console.error('Stream error:', e);
+  }
+}
+
+async function switchServer(idx, btn) {
+  if (!currentStreams[idx]) return;
+  activeStreamIdx = idx;
+  document.querySelectorAll('.server-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+  const vc = $('videoContainer');
+  vc.innerHTML = `<div class="video-placeholder"><div class="spinner"></div><span style="font-size:13px;color:var(--text3)">Switching server...</span></div>`;
+  await loadStream(currentStreams[idx], [], null, null, vc);
+}
+
+async function loadStream(stream, subtitles, intro, outro, vc) {
+  if (_hlsInstance) { _hlsInstance.destroy(); _hlsInstance = null; }
+
+  // ── FIX 5: Handle both {url} and {file} field names ──
+  let url = stream.url || stream.file || stream.link;
+  if (!url) throw new Error('Stream object has no url/file/link field');
+
+  const isHLS = url.includes('.m3u8') || stream.type === 'hls' || stream.isM3U8;
+  const streamUrl = isHLS ? getProxiedUrl(url) : url;
+
+  vc.innerHTML = `<video id="hlsVideo" controls autoplay
+    style="width:100%;height:100%;background:#000;display:block"
+    crossorigin="anonymous">
+    ${(subtitles||[]).map(s => {
+      const src = s.file || s.url || s.src || '';
+      if (!src) return '';
+      return `<track kind="subtitles" label="${s.label||s.lang||'Sub'}"
+        src="${src}" srclang="${s.lang||s.language||'en'}"
+        ${(s.label||'').toLowerCase().includes('english') ? 'default' : ''}>`;
+    }).join('')}
+  </video>`;
+
+  const video = $('hlsVideo');
+
+  if (intro || outro) {
+    video.addEventListener('timeupdate', () => {
+      const t = video.currentTime;
+      if (intro && t >= intro.start && t < intro.end) showSkipBtn('Skip Intro', intro.end, video);
+      else if (outro && t >= outro.start && t < outro.end) showSkipBtn('Skip Outro', outro.end, video);
+      else hideSkipBtn();
+    });
+  }
+
+  // ── FIX 6: Better HLS error handling ──
+  if (isHLS && Hls.isSupported()) {
+    _hlsInstance = new Hls({
+      enableWorker: true,
+      lowLatencyMode: false,
+      maxLoadingDelay: 8,
+      manifestLoadingTimeOut: 12000,
+      xhrSetup: (xhr) => { xhr.withCredentials = false; }
+    });
+    _hlsInstance.loadSource(streamUrl);
+    _hlsInstance.attachMedia(video);
+    _hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => {}); });
+    _hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+      if (data.fatal) {
+        console.error('HLS fatal error:', data.type, data.details);
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR && PROXY_URL && streamUrl !== url) {
+          // Proxy failed — try direct URL
+          console.log('Proxy failed, trying direct URL…');
+          showToast('Proxy failed, trying direct…');
+          _hlsInstance.destroy();
+          _hlsInstance = new Hls({ enableWorker: true, manifestLoadingTimeOut: 12000 });
+          _hlsInstance.loadSource(url);
+          _hlsInstance.attachMedia(video);
+          _hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => {}); });
+          _hlsInstance.on(Hls.Events.ERROR, (ev2, d2) => {
+            if (d2.fatal) showStreamError(vc, `Playback failed: ${d2.details}`);
+          });
+        } else {
+          showStreamError(vc, `Playback error: ${data.details} — try switching server`);
+        }
+      }
+    });
+  } else if (isHLS && video.canPlayType('application/vnd.apple.mpegurl')) {
+    // Safari native HLS
+    video.src = streamUrl;
+    video.play().catch(() => {});
+  } else if (!isHLS) {
+    video.src = url;
+    video.play().catch(() => {});
+  } else {
+    showStreamError(vc, 'HLS not supported in this browser.');
+  }
+}
+
+let _skipBtn = null;
+function showSkipBtn(label, skipTo, video) {
+  if (_skipBtn) return;
+  _skipBtn = document.createElement('button');
+  _skipBtn.textContent = label;
+  Object.assign(_skipBtn.style, {
+    position:'absolute', bottom:'64px', right:'20px', zIndex:'10',
+    background:'rgba(232,64,28,0.95)', color:'#fff', border:'none', borderRadius:'6px',
+    padding:'8px 18px', fontFamily:'inherit', fontSize:'13px', fontWeight:'600',
+    cursor:'pointer', boxShadow:'0 4px 16px rgba(0,0,0,0.4)',
+  });
+  _skipBtn.onclick = () => { video.currentTime = skipTo; hideSkipBtn(); };
+  $('videoContainer').appendChild(_skipBtn);
+}
+function hideSkipBtn() { if (_skipBtn) { _skipBtn.remove(); _skipBtn = null; } }
+
+function showStreamError(vc, detail) {
+  vc.innerHTML = `
+    <div class="video-placeholder">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span style="font-size:13px;text-align:center;max-width:340px;line-height:1.8">
+        Stream unavailable.<br>
+        <span style="color:var(--text3);font-size:11px">${detail||''}</span><br><br>
+        <span style="color:var(--accent);cursor:pointer;font-size:12px" onclick="openProxyModal()">🔧 Configure proxy</span>
+        &nbsp;·&nbsp;
+        <span style="color:var(--text2);cursor:pointer;font-size:12px" onclick="switchServer(1,document.getElementById('serverBtn2'))">Try Server 2</span>
+      </span>
+    </div>`;
+}
+
+function switchCategory(cat) {
+  currentCategory = cat;
+  $('subBtn').classList.toggle('active', cat==='sub');
+  $('dubBtn').classList.toggle('active', cat==='dub');
+  activeEpIdx = -1;
+  if (window._providers) {
+    currentEpisodes = getEpList(window._providers, currentProvider, cat);
+    $('epCountBadge').textContent = currentEpisodes.length;
+    renderEpList(currentEpisodes);
+    $('videoContainer').innerHTML = `<div class="video-placeholder">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span style="font-size:13px">Select an episode to stream</span>
+    </div>`;
+    $('watchingTitle').textContent = '—';
+  }
+}
+
+// ── SEARCH ──
+async function handleSearch(q) {
+  clearTimeout(searchTimeout);
+  if (q.length < 2) return;
+  searchTimeout = setTimeout(async () => {
+    showView('sectionView');
+    $('sectionBreadcrumb').textContent = `Search: "${q}"`;
+    $('sectionTitle').textContent = `🔍 Results for "${q}"`;
+    $('loadMoreBtn').style.display = 'none';
+    skeletonCards(12, $('sectionGrid'));
+    try {
+      const data = await fetchAPI(`/search?query=${encodeURIComponent(q)}&per_page=24`);
+      $('sectionGrid').innerHTML = '';
+      (data.results||[]).forEach(a => $('sectionGrid').appendChild(buildCard(a)));
+      if (!data.results?.length) {
+        $('sectionGrid').innerHTML = '<div style="padding:48px;text-align:center;color:var(--text3);grid-column:1/-1">No results found.</div>';
+      }
+    } catch(e) { showToast('Search failed.'); }
+  }, 400);
+}
+
+// ── FILTER ──
+const GENRES = ['Action','Adventure','Comedy','Drama','Ecchi','Fantasy','Horror','Mahou Shoujo','Mecha','Music','Mystery','Psychological','Romance','Sci-Fi','Slice of Life','Sports','Supernatural','Thriller'];
+
+function openFilter() {
+  const chips = $('genreChips');
+  if (!chips.children.length) {
+    chips.innerHTML = GENRES.map(g => `<button class="chip" onclick="toggleFilter('genre','${g}',this)">${g}</button>`).join('');
+  }
+  $('filterModal').classList.add('open');
+}
+function closeFilter() { $('filterModal').classList.remove('open'); }
+
+function toggleFilter(key, val, el) {
+  if (key === 'sort') {
+    document.querySelectorAll('#filterModal .filter-chips').forEach(row => {
+      Array.from(row.children).filter(c => c.onclick?.toString().includes("'sort'")).forEach(c => c.classList.remove('active'));
+    });
+    el.classList.add('active');
+    filterState[key] = val;
+  } else {
+    el.classList.toggle('active');
+    if (el.classList.contains('active')) filterState[key] = val;
+    else delete filterState[key];
+  }
+}
+
+async function applyFilter() {
+  closeFilter();
+  showView('sectionView');
+  $('sectionBreadcrumb').textContent = 'Filter Results';
+  $('sectionTitle').textContent = '🎯 Filter Results';
+  $('loadMoreBtn').style.display = 'none';
+  skeletonCards(20, $('sectionGrid'));
+  const params = new URLSearchParams({ per_page: 20, ...filterState });
+  try {
+    const data = await fetchAPI(`/filter?${params}`);
+    $('sectionGrid').innerHTML = '';
+    (data.results||[]).forEach(a => $('sectionGrid').appendChild(buildCard(a)));
+    if (!data.results?.length) {
+      $('sectionGrid').innerHTML = '<div style="padding:48px;text-align:center;color:var(--text3);grid-column:1/-1">No results for these filters.</div>';
+    }
+  } catch(e) { showToast('Filter failed.'); }
+}
+
+$('filterModal').addEventListener('click', e => { if (e.target === $('filterModal')) closeFilter(); });
+
+// ── INIT ──
+updateProxyStatus();
+if (!PROXY_URL) {
+  setTimeout(() => openProxyModal(), 800);
+} else {
+  document.getElementById('configBanner').classList.add('hidden');
+}
+loadSpotlight();
+loadHomeRows();
+</script>
+</body>
+</html>
